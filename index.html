@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Costos de Nube (y=mx+b)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- CSS: Estilos personalizados -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Slate 900 */
+        }
+        .card {
+            background-color: #1e293b; /* Slate 800 */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border: 1px solid #334155;
+        }
+        input[type="number"] {
+            background-color: #0f172a;
+            border: 1px solid #475569;
+            color: #f8fafc;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex items-center justify-center">
+
+    <div class="w-full max-w-5xl">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-2">
+                <i class="fas fa-calculator text-blue-400 mr-3"></i>
+                Simulador de Costos en la Nube
+            </h1>
+            <p class="text-xl text-gray-400">Modelo Lineal: $Costo = m \cdot Volumen + b$</p>
+        </header>
+
+        <!-- Configuración Global de Parámetros -->
+        <div class="card p-6 md:p-8 rounded-xl mb-10">
+            <h2 class="text-2xl font-bold text-blue-400 mb-4 border-b border-gray-600 pb-2">1. Configuración del Modelo de Costos</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="costo_variable_m" class="block text-sm font-medium text-gray-300 mb-1">
+                        Costo Variable (m - Pendiente) - Costo por GB (USD)
+                    </label>
+                    <input type="number" id="costo_variable_m" value="0.03" step="0.001"
+                           class="w-full p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="Ej: 0.03">
+                </div>
+                <div>
+                    <label for="costo_fijo_b" class="block text-sm font-medium text-gray-300 mb-1">
+                        Costo Fijo (b - Intercepto) - Tarifa Base Mensual (USD)
+                    </label>
+                    <input type="number" id="costo_fijo_b" value="25" step="1"
+                           class="w-full p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="Ej: 25">
+                </div>
+            </div>
+            
+            <!-- Nuevos botones de carga de escenarios -->
+            <div class="mt-6 pt-4 border-t border-gray-700">
+                <p class="text-sm text-gray-400 mb-3 font-semibold">Cargar Escenario Predefinido:</p>
+                <div class="flex flex-wrap gap-3">
+                    <button onclick="cargarEscenario(0.05, 0)" 
+                            class="text-xs px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded-full transition duration-150">
+                        <i class="fas fa-euro-sign mr-1"></i> Caso 1: Pago por Uso (0.05 / 0)
+                    </button>
+                    <button onclick="cargarEscenario(0.03, 25)" 
+                            class="text-xs px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition duration-150">
+                        <i class="fas fa-certificate mr-1"></i> Caso 2: Estándar (0.03 / 25)
+                    </button>
+                    <button onclick="cargarEscenario(0.015, 120)" 
+                            class="text-xs px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded-full transition duration-150">
+                        <i class="fas fa-server mr-1"></i> Caso 3: Dedicado (0.015 / 120)
+                    </button>
+                </div>
+            </div>
+            <p class="mt-4 text-sm text-gray-400">
+                <i class="fas fa-info-circle mr-1"></i> Estos parámetros se aplican a ambos cálculos. Los valores iniciales corresponden al "Caso 2: Estándar".
+            </p>
+        </div>
+
+        <!-- Secciones de Cálculo -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            <!-- Cálculo 1: Volumen a Costo (y = mx + b) -->
+            <div class="card p-6 md:p-8 rounded-xl flex flex-col">
+                <h2 class="text-2xl font-bold text-teal-400 mb-4 border-b border-gray-600 pb-2">2. Calcular Costo Total (Y)</h2>
+                <p class="text-gray-400 mb-4">Ingrese el volumen de datos para estimar el costo.</p>
+
+                <label for="volumen_x" class="block text-sm font-medium text-gray-300 mb-1">
+                    Volumen de Datos (x) en Gigabytes (GB)
+                </label>
+                <input type="number" id="volumen_x" value="1000" step="1"
+                       class="w-full p-3 rounded-lg focus:ring-teal-500 focus:border-teal-500 mb-4"
+                       placeholder="Ej: 1000">
+                
+                <button onclick="calcularCostoTotal()"
+                        class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-md flex items-center justify-center mb-6">
+                    <i class="fas fa-money-bill-wave mr-2"></i> Calcular Costo
+                </button>
+
+                <!-- Resultado 1 -->
+                <div id="resultado_costo" class="p-4 bg-teal-900 bg-opacity-30 rounded-lg text-center mt-auto border-l-4 border-teal-500">
+                    <p class="text-gray-300">Costo Total Estimado (USD):</p>
+                    <p class="text-3xl font-bold text-teal-300 mt-1" id="costo_resultado">$55.00</p>
+                </div>
+            </div>
+
+            <!-- Cálculo 2: Costo a Volumen Máximo (x = (y - b) / m) -->
+            <div class="card p-6 md:p-8 rounded-xl flex flex-col">
+                <h2 class="text-2xl font-bold text-indigo-400 mb-4 border-b border-gray-600 pb-2">3. Calcular Volumen Máximo (X)</h2>
+                <p class="text-gray-400 mb-4">Ingrese su presupuesto límite para estimar el volumen máximo.</p>
+
+                <label for="presupuesto_y" class="block text-sm font-medium text-gray-300 mb-1">
+                    Presupuesto Límite (y) en Dólares (USD)
+                </label>
+                <input type="number" id="presupuesto_y" value="213" step="1"
+                       class="w-full p-3 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 mb-4"
+                       placeholder="Ej: 213">
+                
+                <button onclick="calcularVolumenMaximo()"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-md flex items-center justify-center mb-6">
+                    <i class="fas fa-upload mr-2"></i> Calcular Volumen
+                </button>
+
+                <!-- Resultado 2 -->
+                <div id="resultado_volumen" class="p-4 bg-indigo-900 bg-opacity-30 rounded-lg text-center mt-auto border-l-4 border-indigo-500">
+                    <p class="text-gray-300">Volumen Máximo Transferible:</p>
+                    <p class="text-3xl font-bold text-indigo-300 mt-1" id="volumen_resultado">6266.67 GB (~6.27 TB)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript: Lógica de la aplicación -->
+    <script>
+        // Función de utilidad para formatear a moneda USD
+        const formatearMoneda = (numero) => {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(numero);
+        };
+
+        // Función de utilidad para formatear volumen a TB
+        const formatearVolumen = (gb) => {
+            if (gb >= 1024) {
+                return `${(gb / 1024).toFixed(2)} TB`;
+            }
+            return `${gb.toFixed(2)} GB`;
+        };
+
+        // Función para cargar los parámetros de un escenario predefinido y recalcular
+        function cargarEscenario(m, b) {
+            document.getElementById('costo_variable_m').value = m;
+            document.getElementById('costo_fijo_b').value = b;
+            // Recalcular los resultados inmediatamente
+            calcularCostoTotal();
+            calcularVolumenMaximo();
+        }
+
+        // ----------------------------------------------------
+        // 1. Cálculo de Costo Total (y = mx + b)
+        // ----------------------------------------------------
+        function calcularCostoTotal() {
+            try {
+                // Obtener parámetros m y b (compartidos)
+                const m = parseFloat(document.getElementById('costo_variable_m').value);
+                const b = parseFloat(document.getElementById('costo_fijo_b').value);
+                // Obtener la variable independiente x (volumen)
+                const x = parseFloat(document.getElementById('volumen_x').value);
+
+                // Validaciones básicas
+                if (isNaN(m) || isNaN(b) || isNaN(x)) {
+                    document.getElementById('costo_resultado').textContent = "Error: Ingrese valores válidos.";
+                    document.getElementById('costo_resultado').classList.add('text-red-400');
+                    return;
+                }
+                
+                // Aplicar la función lineal: y = m*x + b
+                const y = (m * x) + b;
+
+                // Mostrar resultado
+                document.getElementById('costo_resultado').textContent = formatearMoneda(y);
+                document.getElementById('costo_resultado').classList.remove('text-red-400');
+                document.getElementById('costo_resultado').classList.add('text-teal-300');
+
+            } catch (error) {
+                console.error("Error en el cálculo de costo:", error);
+                document.getElementById('costo_resultado').textContent = "Error interno de cálculo.";
+            }
+        }
+
+        // ----------------------------------------------------
+        // 2. Cálculo de Volumen Máximo (x = (y - b) / m)
+        // ----------------------------------------------------
+        function calcularVolumenMaximo() {
+            try {
+                // Obtener parámetros m y b (compartidos)
+                const m = parseFloat(document.getElementById('costo_variable_m').value);
+                const b = parseFloat(document.getElementById('costo_fijo_b').value);
+                // Obtener la variable dependiente y (presupuesto)
+                const y = parseFloat(document.getElementById('presupuesto_y').value);
+
+                // Validaciones
+                if (isNaN(m) || isNaN(b) || isNaN(y)) {
+                    document.getElementById('volumen_resultado').textContent = "Error: Ingrese valores válidos.";
+                    document.getElementById('volumen_resultado').classList.add('text-red-400');
+                    return;
+                }
+                if (m <= 0) {
+                    document.getElementById('volumen_resultado').textContent = "Error: Costo Variable (m) debe ser positivo.";
+                    document.getElementById('volumen_resultado').classList.add('text-red-400');
+                    return;
+                }
+                if (y < b) {
+                    document.getElementById('volumen_resultado').textContent = "Error: El presupuesto debe ser mayor o igual al Costo Fijo (b).";
+                    document.getElementById('volumen_resultado').classList.add('text-red-400');
+                    return;
+                }
+
+                // Despejar la función lineal: x = (y - b) / m
+                const x = (y - b) / m;
+                
+                // Mostrar resultado
+                const resultado_gb = x.toFixed(2);
+                const resultado_tb = formatearVolumen(x);
+                document.getElementById('volumen_resultado').innerHTML = `${resultado_gb} GB <span class="text-base text-gray-400 block mt-1">(${resultado_tb})</span>`;
+                document.getElementById('volumen_resultado').classList.remove('text-red-400');
+                document.getElementById('volumen_resultado').classList.add('text-indigo-300');
+
+            } catch (error) {
+                console.error("Error en el cálculo de volumen:", error);
+                document.getElementById('volumen_resultado').textContent = "Error interno de cálculo.";
+            }
+        }
+
+        // Inicializar los cálculos al cargar la página con los valores por defecto
+        window.onload = function() {
+            calcularCostoTotal();
+            calcularVolumenMaximo();
+        };
+
+    </script>
+</body>
+</html>
