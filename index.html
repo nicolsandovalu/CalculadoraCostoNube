@@ -9,6 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
+    <!-- Librería Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    
     <!-- CSS: Estilos personalizados -->
     <style>
         body {
@@ -25,11 +28,15 @@
             border: 1px solid #475569;
             color: #f8fafc;
         }
+        #chartCanvas {
+            max-height: 400px;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body class="p-4 md:p-8 min-h-screen flex items-center justify-center">
 
-    <div class="w-full max-w-5xl">
+    <div class="w-full max-w-7xl">
         <header class="text-center mb-12">
             <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-2">
                 <i class="fas fa-calculator text-blue-400 mr-3"></i>
@@ -37,6 +44,15 @@
             </h1>
             <p class="text-xl text-gray-400">Modelo Lineal: $Costo = m \cdot Volumen + b$</p>
         </header>
+
+        <!-- Gráfico - Nueva Sección -->
+        <div class="card p-6 md:p-8 rounded-xl mb-10">
+            <h2 class="text-2xl font-bold text-pink-400 mb-4 border-b border-gray-600 pb-2">0. Visualización del Modelo Lineal ($y = mx + b$)</h2>
+            <div class="flex items-center justify-center">
+                <!-- Canvas para Chart.js -->
+                <canvas id="costLineChart" class="w-full"></canvas>
+            </div>
+        </div>
 
         <!-- Configuración Global de Parámetros -->
         <div class="card p-6 md:p-8 rounded-xl mb-10">
@@ -106,7 +122,7 @@
                 <!-- Resultado 1 -->
                 <div id="resultado_costo" class="p-4 bg-teal-900 bg-opacity-30 rounded-lg text-center mt-auto border-l-4 border-teal-500">
                     <p class="text-gray-300">Costo Total Estimado (CLP):</p>
-                    <p class="text-3xl font-bold text-teal-300 mt-1" id="costo_resultado">$325.00</p>
+                    <p class="text-3xl font-bold text-teal-300 mt-1" id="costo_resultado">$55.000</p>
                 </div>
             </div>
 
@@ -138,12 +154,15 @@
 
     <!-- JavaScript: Lógica de la aplicación -->
     <script>
+        // Variable global para mantener la instancia del gráfico
+        let costChartInstance = null;
+
         // Función de utilidad para formatear a moneda CLP
         const formatearMoneda = (numero) => {
             return new Intl.NumberFormat('es-CL', {
                 style: 'currency',
                 currency: 'CLP',
-                minimumFractionDigits: 0, // CLP típicamente no usa decimales
+                minimumFractionDigits: 0, 
                 maximumFractionDigits: 0
             }).format(numero);
         };
@@ -156,13 +175,178 @@
             return `${gb.toFixed(2)} GB`;
         };
 
+        // Función para generar los puntos de la recta y el punto de presupuesto
+        function generarPuntosRecta(m, b, max_x, max_y, presupuesto_y) {
+            const data = [];
+            
+            // Puntos de la línea (desde 0 hasta el máximo X calculado o un valor fijo)
+            const steps = 10;
+            const final_x = Math.max(max_x, 1000); // Asegura al menos 1000 GB en el eje X
+            const step_size = final_x / steps;
+
+            for (let i = 0; i <= steps; i++) {
+                const x = i * step_size;
+                const y = (m * x) + b;
+                data.push({ x: x, y: y });
+            }
+            
+            let presupuestoPoint = null;
+            if (presupuesto_y > b && m > 0) {
+                // Agregar el punto límite de presupuesto
+                const limite_x = (presupuesto_y - b) / m;
+                presupuestoPoint = { x: limite_x, y: presupuesto_y };
+            }
+
+            return { data, presupuestoPoint };
+        }
+
+        // Función principal para actualizar el gráfico
+        function actualizarGrafico() {
+            const m = parseFloat(document.getElementById('costo_variable_m').value);
+            const b = parseFloat(document.getElementById('costo_fijo_b').value);
+            const presupuesto_y = parseFloat(document.getElementById('presupuesto_y').value);
+            const volumen_x = parseFloat(document.getElementById('volumen_x').value);
+
+            if (isNaN(m) || isNaN(b) || m <= 0) {
+                if (costChartInstance) {
+                    costChartInstance.destroy();
+                    costChartInstance = null;
+                }
+                return;
+            }
+
+            const limite_x = (presupuesto_y - b) / m;
+            const { data, presupuestoPoint } = generarPuntosRecta(m, b, limite_x, presupuesto_y, presupuesto_y);
+
+            const presupuestoData = presupuestoPoint ? [presupuestoPoint] : [];
+            const volumenActualData = [{ x: volumen_x, y: (m * volumen_x) + b }];
+
+            const config = {
+                type: 'line',
+                data: {
+                    datasets: [
+                        {
+                            label: `Costo Total (y = ${m}x + ${b})`,
+                            data: data,
+                            borderColor: '#38bdf8', // Blue-400
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0,
+                            pointRadius: 0,
+                            segment: {
+                                borderColor: ctx => {
+                                    if (presupuestoPoint && ctx.p1.parsed.x > presupuestoPoint.x) {
+                                        return '#f87171'; // Red-400 para sobrecosto
+                                    }
+                                    return '#38bdf8';
+                                }
+                            }
+                        },
+                        {
+                            label: 'Límite Presupuestario',
+                            data: presupuestoData,
+                            backgroundColor: '#a78bfa', // Violet-400
+                            pointRadius: 8,
+                            type: 'scatter',
+                            borderColor: '#a78bfa',
+                            tooltips: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `Límite: ${formatearMoneda(context.parsed.y)} @ ${formatearVolumen(context.parsed.x)}`;
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            label: 'Volumen Actual',
+                            data: volumenActualData,
+                            backgroundColor: '#34d399', // Green-400
+                            pointRadius: 8,
+                            type: 'scatter',
+                            borderColor: '#34d399',
+                            tooltips: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `Volumen Actual: ${formatearMoneda(context.parsed.y)} @ ${formatearVolumen(context.parsed.x)}`;
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: {
+                                display: true,
+                                text: 'Volumen de Datos (GB)',
+                                color: '#94a3b8'
+                            },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Costo Total (CLP)',
+                                color: '#94a3b8'
+                            },
+                            ticks: {
+                                callback: function(value, index, ticks) {
+                                    return formatearMoneda(value);
+                                },
+                                color: '#94a3b8'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#f1f5f9'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += `${formatearMoneda(context.parsed.y)} @ ${formatearVolumen(context.parsed.x)}`;
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            const ctx = document.getElementById('costLineChart').getContext('2d');
+            
+            if (costChartInstance) {
+                // Actualizar datos existentes
+                costChartInstance.data.datasets[0].data = data;
+                costChartInstance.data.datasets[0].label = `Costo Total (y = ${m}x + ${b})`;
+                costChartInstance.data.datasets[1].data = presupuestoData;
+                costChartInstance.data.datasets[2].data = volumenActualData;
+                costChartInstance.update();
+            } else {
+                // Crear nueva instancia
+                costChartInstance = new Chart(ctx, config);
+            }
+        }
+
         // Función para cargar los parámetros de un escenario predefinido y recalcular
         function cargarEscenario(m, b) {
             document.getElementById('costo_variable_m').value = m;
             document.getElementById('costo_fijo_b').value = b;
-            // Recalcular los resultados inmediatamente
+            // Recalcular los resultados y el gráfico inmediatamente
             calcularCostoTotal();
             calcularVolumenMaximo();
+            actualizarGrafico();
         }
 
         // ----------------------------------------------------
@@ -190,6 +374,9 @@
                 document.getElementById('costo_resultado').textContent = formatearMoneda(y);
                 document.getElementById('costo_resultado').classList.remove('text-red-400');
                 document.getElementById('costo_resultado').classList.add('text-teal-300');
+                
+                // Actualizar gráfico
+                actualizarGrafico();
 
             } catch (error) {
                 console.error("Error en el cálculo de costo:", error);
@@ -235,16 +422,20 @@
                 document.getElementById('volumen_resultado').classList.remove('text-red-400');
                 document.getElementById('volumen_resultado').classList.add('text-indigo-300');
 
+                // Actualizar gráfico
+                actualizarGrafico();
+
             } catch (error) {
                 console.error("Error en el cálculo de volumen:", error);
                 document.getElementById('volumen_resultado').textContent = "Error interno de cálculo.";
             }
         }
 
-        // Inicializar los cálculos al cargar la página con los valores por defecto
+        // Inicializar los cálculos y el gráfico al cargar la página
         window.onload = function() {
             calcularCostoTotal();
             calcularVolumenMaximo();
+            actualizarGrafico(); // Llamada inicial para dibujar el gráfico
         };
 
     </script>
