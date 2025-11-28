@@ -44,42 +44,42 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label for="costo_variable_m" class="block text-sm font-medium text-gray-300 mb-1">
-                        Costo Variable (m - Pendiente) - Costo por GB (USD)
+                        Costo Variable (m - Pendiente) - Costo por GB (CLP)
                     </label>
-                    <input type="number" id="costo_variable_m" value="0.03" step="0.001"
+                    <input type="number" id="costo_variable_m" value="300" step="1"
                            class="w-full p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="Ej: 0.03">
+                           placeholder="Ej: 300">
                 </div>
                 <div>
                     <label for="costo_fijo_b" class="block text-sm font-medium text-gray-300 mb-1">
-                        Costo Fijo (b - Intercepto) - Tarifa Base Mensual (USD)
+                        Costo Fijo (b - Intercepto) - Tarifa Base Mensual (CLP)
                     </label>
-                    <input type="number" id="costo_fijo_b" value="25" step="1"
+                    <input type="number" id="costo_fijo_b" value="25000" step="1"
                            class="w-full p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="Ej: 25">
+                           placeholder="Ej: 25000">
                 </div>
             </div>
             
             <!-- Nuevos botones de carga de escenarios -->
             <div class="mt-6 pt-4 border-t border-gray-700">
-                <p class="text-sm text-gray-400 mb-3 font-semibold">Cargar Escenario Predefinido:</p>
+                <p class="text-sm text-gray-400 mb-3 font-semibold">Cargar Escenario Predefinido (CLP):</p>
                 <div class="flex flex-wrap gap-3">
-                    <button onclick="cargarEscenario(0.05, 0)" 
+                    <button onclick="cargarEscenario(500, 0)" 
                             class="text-xs px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded-full transition duration-150">
-                        <i class="fas fa-euro-sign mr-1"></i> Caso 1: Pago por Uso (0.05 / 0)
+                        <i class="fas fa-peso-sign mr-1"></i> Caso 1: Pago por Uso (500 / 0)
                     </button>
-                    <button onclick="cargarEscenario(0.03, 25)" 
+                    <button onclick="cargarEscenario(300, 25000)" 
                             class="text-xs px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition duration-150">
-                        <i class="fas fa-certificate mr-1"></i> Caso 2: Estándar (0.03 / 25)
+                        <i class="fas fa-certificate mr-1"></i> Caso 2: Estándar (300 / 25.000)
                     </button>
-                    <button onclick="cargarEscenario(0.015, 120)" 
+                    <button onclick="cargarEscenario(150, 120000)" 
                             class="text-xs px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded-full transition duration-150">
-                        <i class="fas fa-server mr-1"></i> Caso 3: Dedicado (0.015 / 120)
+                        <i class="fas fa-server mr-1"></i> Caso 3: Dedicado (150 / 120.000)
                     </button>
                 </div>
             </div>
             <p class="mt-4 text-sm text-gray-400">
-                <i class="fas fa-info-circle mr-1"></i> Estos parámetros se aplican a ambos cálculos. Los valores iniciales corresponden al "Caso 2: Estándar".
+                <i class="fas fa-info-circle mr-1"></i> Estos parámetros se aplican a ambos cálculos.
             </p>
         </div>
 
@@ -105,8 +105,8 @@
 
                 <!-- Resultado 1 -->
                 <div id="resultado_costo" class="p-4 bg-teal-900 bg-opacity-30 rounded-lg text-center mt-auto border-l-4 border-teal-500">
-                    <p class="text-gray-300">Costo Total Estimado (USD):</p>
-                    <p class="text-3xl font-bold text-teal-300 mt-1" id="costo_resultado">$55.00</p>
+                    <p class="text-gray-300">Costo Total Estimado (CLP):</p>
+                    <p class="text-3xl font-bold text-teal-300 mt-1" id="costo_resultado">$325.00</p>
                 </div>
             </div>
 
@@ -116,11 +116,11 @@
                 <p class="text-gray-400 mb-4">Ingrese su presupuesto límite para estimar el volumen máximo.</p>
 
                 <label for="presupuesto_y" class="block text-sm font-medium text-gray-300 mb-1">
-                    Presupuesto Límite (y) en Dólares (USD)
+                    Presupuesto Límite (y) en Pesos Chilenos (CLP)
                 </label>
-                <input type="number" id="presupuesto_y" value="213" step="1"
+                <input type="number" id="presupuesto_y" value="200000" step="1000"
                        class="w-full p-3 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 mb-4"
-                       placeholder="Ej: 213">
+                       placeholder="Ej: 200000">
                 
                 <button onclick="calcularVolumenMaximo()"
                         class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-md flex items-center justify-center mb-6">
@@ -130,7 +130,7 @@
                 <!-- Resultado 2 -->
                 <div id="resultado_volumen" class="p-4 bg-indigo-900 bg-opacity-30 rounded-lg text-center mt-auto border-l-4 border-indigo-500">
                     <p class="text-gray-300">Volumen Máximo Transferible:</p>
-                    <p class="text-3xl font-bold text-indigo-300 mt-1" id="volumen_resultado">6266.67 GB (~6.27 TB)</p>
+                    <p class="text-3xl font-bold text-indigo-300 mt-1" id="volumen_resultado">583.33 GB</p>
                 </div>
             </div>
         </div>
@@ -138,13 +138,13 @@
 
     <!-- JavaScript: Lógica de la aplicación -->
     <script>
-        // Función de utilidad para formatear a moneda USD
+        // Función de utilidad para formatear a moneda CLP
         const formatearMoneda = (numero) => {
-            return new Intl.NumberFormat('en-US', {
+            return new Intl.NumberFormat('es-CL', {
                 style: 'currency',
-                currency: 'USD',
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+                currency: 'CLP',
+                minimumFractionDigits: 0, // CLP típicamente no usa decimales
+                maximumFractionDigits: 0
             }).format(numero);
         };
 
