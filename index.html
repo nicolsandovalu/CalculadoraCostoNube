@@ -64,7 +64,7 @@
                     </label>
                     <input type="number" id="costo_variable_m" value="300" step="1"
                            class="w-full p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="Ej: 300">
+                           placeholder="Ej: 300" oninput="calcularCostoTotal(); calcularVolumenMaximo();">
                 </div>
                 <div>
                     <label for="costo_fijo_b" class="block text-sm font-medium text-gray-300 mb-1">
@@ -72,7 +72,7 @@
                     </label>
                     <input type="number" id="costo_fijo_b" value="25000" step="1"
                            class="w-full p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="Ej: 25000">
+                           placeholder="Ej: 25000" oninput="calcularCostoTotal(); calcularVolumenMaximo();">
                 </div>
             </div>
             
@@ -110,9 +110,9 @@
                 <label for="volumen_x" class="block text-sm font-medium text-gray-300 mb-1">
                     Volumen de Datos (x) en Gigabytes (GB)
                 </label>
-                <input type="number" id="volumen_x" value="1000" step="1"
+                <input type="number" id="volumen_x" value="100" step="1"
                        class="w-full p-3 rounded-lg focus:ring-teal-500 focus:border-teal-500 mb-4"
-                       placeholder="Ej: 1000">
+                       placeholder="Ej: 1000" oninput="calcularCostoTotal();">
                 
                 <button onclick="calcularCostoTotal()"
                         class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-md flex items-center justify-center mb-6">
@@ -136,7 +136,7 @@
                 </label>
                 <input type="number" id="presupuesto_y" value="200000" step="1000"
                        class="w-full p-3 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 mb-4"
-                       placeholder="Ej: 200000">
+                       placeholder="Ej: 200000" oninput="calcularVolumenMaximo();">
                 
                 <button onclick="calcularVolumenMaximo()"
                         class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-md flex items-center justify-center mb-6">
@@ -181,7 +181,9 @@
             
             // Puntos de la línea (desde 0 hasta el máximo X calculado o un valor fijo)
             const steps = 10;
-            const final_x = Math.max(max_x, 1000); // Asegura al menos 1000 GB en el eje X
+            // Usar el máximo entre el límite de presupuesto (max_x) y el volumen actual (volumen_x) para definir el rango del eje X
+            const volumen_x = parseFloat(document.getElementById('volumen_x').value) || 0;
+            const final_x = Math.max(max_x * 1.2, volumen_x * 1.5, 2000); // Muestra un rango más amplio (20% más que el límite o 50% más que el actual, mínimo 2000 GB)
             const step_size = final_x / steps;
 
             for (let i = 0; i <= steps; i++) {
